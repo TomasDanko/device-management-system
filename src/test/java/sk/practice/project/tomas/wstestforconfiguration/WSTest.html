@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Spring WebSocket Test</title>
+    <!-- SockJS a STOMP knižnice -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<h2>WebSocket Test</h2>
+<div id="log"
+     style="white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll;"></div>
+
+<script>
+    function log(message) {
+        const logDiv = document.getElementById("log");
+        logDiv.textContent += message + "\n";
+        logDiv.scrollTop = logDiv.scrollHeight;
+        console.log(message);
+    }
+
+    // 1️⃣ Pripojenie na WebSocket
+    const socket = new WebSocket("ws://localhost:8080/ws");
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function (frame) {
+        log("✅ Connected: " + frame);
+
+        // 2️⃣ Subscribe na topic
+        stompClient.subscribe("/topic/config-changed", function (message) {
+            log("📩 Received message: " + message.body);
+        });
+
+        // 3️⃣ Send test message
+        const payload = {
+            deviceId: 1,
+            name: "test_4"
+        };
+        stompClient.send("/app/configuration/create", {}, JSON.stringify(payload));
+        log("✉️ Sent message: " + JSON.stringify(payload));
+    }, function (error) {
+        log("❌ Error: " + error);
+    });
+</script>
+</body>
+</html>
